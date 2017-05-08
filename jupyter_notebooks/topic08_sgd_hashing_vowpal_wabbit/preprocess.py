@@ -1,24 +1,29 @@
 import sys
-from tqdm import tqdm
 
-topics = ['javascript', 'java', 'python', 'ruby', 'php',
-          'c++', 'c#', 'go', 'scala', 'swift']
-topic_set = set(topics)
-topic_map = dict(zip(topics, range(1, len(topics) + 1)))
+etalon_tags = ["javascript", "java", "python", "ruby", "php", "c++", "c#", "go", "scala", "swift"]
+etalon_tags_set = set(etalon_tags)
 
-num_corrupted, num_selected = 0, 0
-with open(sys.argv[1]) as inp_file, open(sys.argv[2], 'w') as out_file:
-    for line in tqdm(inp_file):
-        values = line.strip().split('\t')
-        if len(values) != 2:
-            num_corrupted += 1
-            continue
-        text, labels = values
-        labels = set(labels.split())
-        topics_from_list = labels.intersection(topic_set)
-        if len(topics_from_list) == 1:
-            num_selected += 1
-            out_file.write('{} | {}\n'.format(str(topic_map[list(topics_from_list)[0]]), 
-                                              text.strip().replace(':', '').replace('|', '')))
-print("{} lines selected, {} lines corrupted.".format(num_selected, num_corrupted))
+input_f  = sys.argv[1]
+output_f = sys.argv[2]
 
+f_out = open(output_f, 'w')
+with open(input_f) as f:
+	for line in f:
+		splitted = line.split("\t")
+		if len(splitted) != 2:
+			continue
+	
+		tags = set(splitted[1].strip().split(" ")) - set([''])
+		intersect = list(tags & etalon_tags_set)
+		if len(intersect) != 1:
+			continue
+
+		processed_label = etalon_tags.index(intersect[0]) + 1
+		processed_text = splitted[0].strip().replace(":", "").replace("|", "")
+
+		if len(processed_text) < 1:
+			continue
+
+		f_out.write(str(processed_label) + ' | ' + processed_text + '\n')
+
+f_out.close()
